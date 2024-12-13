@@ -267,9 +267,17 @@ func AddOrUpdateTolerationInPodSpec(spec *v1.PodSpec, toleration *v1.Toleration)
 	updated := false
 	for i := range podTolerations {
 		if toleration.MatchToleration(&podTolerations[i]) {
+			// Toleration matched what is already in pod, but does it already have
+			// all the attributes that were provided? The line below check for that.
 			if helper.Semantic.DeepEqual(toleration, podTolerations[i]) {
 				return false
 			}
+			// If we make it here, it means that the pod spec has a matching toleration
+			// that needs to be overriden with the provided toleration parameter. In
+			// other words, anyhing about the existing pod on this toleration will be
+			// explicitly ignores, so it matches exactly what was passed in. For debuging
+			// the `TestUnreachableNodeDaemonLaunchesPod`, this is a interesting place
+			// for a breakpoint!
 			newTolerations = append(newTolerations, *toleration)
 			updated = true
 			continue

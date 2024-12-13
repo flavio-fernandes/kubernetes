@@ -45,6 +45,7 @@ func GetTemplateGeneration(ds *apps.DaemonSet) (*int64, error) {
 }
 
 // AddOrUpdateDaemonPodTolerations apply necessary tolerations to DaemonSet Pods, e.g. node.kubernetes.io/not-ready:NoExecute.
+// This is where daemon pods get their default tolerations
 func AddOrUpdateDaemonPodTolerations(spec *v1.PodSpec) {
 	// DaemonSet pods shouldn't be deleted by NodeController in case of node problems.
 	// Add infinite toleration for taint notReady:NoExecute here

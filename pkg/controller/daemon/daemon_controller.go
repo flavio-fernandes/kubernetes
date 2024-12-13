@@ -1324,6 +1324,7 @@ func NewPod(ds *apps.DaemonSet, nodeName string) *v1.Pod {
 	newPod.Spec.NodeName = nodeName
 
 	// Added default tolerations for DaemonSet pods.
+	// This is where a new daemon pod add has its tolerations. A good breakpoint line.
 	util.AddOrUpdateDaemonPodTolerations(&newPod.Spec)
 
 	return newPod

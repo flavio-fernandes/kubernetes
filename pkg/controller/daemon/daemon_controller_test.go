@@ -1971,10 +1971,24 @@ func TestNotReadyNodeDaemonLaunchesPod(t *testing.T) {
 }
 
 // DaemonSet should launch a pod on an unreachable node with taint unreachable:NoExecute.
+// Debug it!
 func TestUnreachableNodeDaemonLaunchesPod(t *testing.T) {
 	for _, strategy := range updateStrategies() {
 		ds := newDaemonSet("simple")
 		ds.Spec.UpdateStrategy = *strategy
+
+		// Modify test's DaemonSet, so the pod template includes a toleration that
+		// has a very specific key: v1.TaintNodeUnreachable
+		var tolerationSeconds int64 = 0
+		toleration := v1.Toleration{
+			Key:      v1.TaintNodeUnreachable,
+			Operator: v1.TolerationOpExists, // Note: TolerationOpEqual would make it unique enough to not get overwriten!
+			// Operator:          v1.TolerationOpEqual, // Note: TolerationOpEqual would make it unique enough to not get overwriten!
+			Effect:            v1.TaintEffectNoExecute,
+			TolerationSeconds: &tolerationSeconds,
+		}
+		ds.Spec.Template.Spec.Tolerations = []v1.Toleration{toleration}
+
 		_, ctx := ktesting.NewTestContext(t)
 		manager, podControl, _, err := newTestController(ctx, ds)
 		if err != nil {
@@ -1995,7 +2009,7 @@ func TestUnreachableNodeDaemonLaunchesPod(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		expectSyncDaemonSets(t, manager, ds, podControl, 1, 0, 0)
+		expectSyncDaemonSets(t, manager, ds, podControl, 1 /*expectedCreates*/, 0 /*expectedDeletes*/, 0 /*expectedEvents*/)
 	}
 }
 
